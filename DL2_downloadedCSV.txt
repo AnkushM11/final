@@ -1,0 +1,85 @@
+import pandas as pd
+import numpy as np
+
+train=pd.read_csv("fashion-mnist_train.csv")
+
+train.columns
+
+x=train.iloc[:,1:]
+x.columns
+
+
+y=train['label']
+
+from sklearn.model_selection import train_test_split
+
+train_x,test_x,train_y,test_y=train_test_split(x,y,test_size=0.30,random_state=False)
+
+train_x.shape
+
+
+train_y.shape
+
+test_x.shape
+
+test_y.shape
+
+test_x=test_x.values.reshape(-1,28,28)
+test_x.shape
+
+train_x=train_x.values.reshape(-1,28,28)
+train_x.shape
+
+train_x=train_x/255
+
+test_x=test_x/255
+
+class_names=["Tshirt/top","Trouser","Pullover","Dress","Coat","Sandal","Shirt","Sneaker","Bag","Ankle Boot"]
+
+import matplotlib.pyplot as plt
+plt.figure(figsize=(15,15))
+for i in range(25):
+    plt.subplot(5,5,i+1)
+    plt.xticks([])
+    plt.yticks([])
+    plt.grid(False)
+    plt.imshow(train_x[i],cmap=plt.cm.binary)
+    plt.xlabel(class_names[train_y.values[i]])
+plt.show()
+
+from keras.models import Sequential
+from keras.layers import Flatten,Dense,Dropout
+
+model=Sequential()
+
+model.add(Flatten(input_shape=(28,28)))
+model.add(Dense(128,activation="relu"))
+
+model.add(Dense(10))
+
+model.summary()
+
+from keras.losses import SparseCategoricalCrossentropy
+
+model.compile(optimizer="adam",loss=SparseCategoricalCrossentropy(from_logits=True),metrics=['accuracy'])
+
+history=model.fit(train_x,train_y,epochs=10)
+
+from keras.layers import Softmax
+predicted_model=Sequential([model,Softmax()])
+
+probabilities=predicted_model.predict(test_x)
+
+plt.figure(figsize=(15,15))
+for i in range(25):
+    plt.subplot(5,5,i+1)
+    plt.xticks([])
+    plt.yticks([])
+    plt.grid(False)
+    if np.argmax(probabilities[i]) == test_y.values[i]:
+        color="blue"
+    else:
+        color="red"
+    plt.imshow(test_x[i],cmap=plt.cm.binary)
+    plt.xlabel("Actual"+ class_names[test_y.values[i]]+ "Predicted: "+class_names[np.argmax(probabilities[i])],color=color)
+plt.show()

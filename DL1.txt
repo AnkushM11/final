@@ -1,0 +1,68 @@
+from sklearn.datasets import load_boston
+import pandas as pd
+
+boston_dataset = load_boston()
+
+df = pd.DataFrame(boston_dataset.data, columns=boston_dataset.feature_names)
+df['MEDV'] = boston_dataset.target
+
+df.head(n=10)   
+
+
+# If load_boston does not work then download the data and use this.
+# Data : https://github.com/afnan47/sem8/blob/master/DL/1_boston_housing.csv
+import pandas as pd
+df = pd.read_csv("./1_boston_housing.csv")
+
+
+from sklearn.model_selection import train_test_split
+
+X = df.loc[:, df.columns != 'MEDV']
+y = df.loc[:, df.columns == 'MEDV']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=123)
+
+
+
+
+
+from sklearn.preprocessing import MinMaxScaler
+mms = MinMaxScaler()
+mms.fit(X_train)
+X_train = mms.transform(X_train)
+X_test = mms.transform(X_test)
+
+
+
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+
+model = Sequential()
+
+model.add(Dense(128, input_shape=(13, ), activation='relu', name='dense_1'))
+model.add(Dense(64, activation='relu', name='dense_2'))
+model.add(Dense(1, activation='linear', name='dense_output'))
+
+model.compile(optimizer='adam', loss='mse', metrics=['mae'])
+model.summary()
+
+
+
+history = model.fit(X_train, y_train, epochs=100, validation_split=0.05, verbose = 1)
+
+pd.DataFrame(history.history).plot(figsize=(10,7))
+plt.title("Metrics graph")
+plt.show()
+
+
+y_pred = model.predict(X_test)
+
+sns.regplot(x=y_test, y=y_pred)
+plt.title("Regression Line for Predicted values")
+plt.show()
+
+
+
+mse_nn, mae_nn = model.evaluate(X_test, y_test)
+
+print('Mean squared error on test data: ', mse_nn)
+print('Mean absolute error on test data: ', mae_nn)
